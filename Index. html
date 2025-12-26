@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NORAN SHAH CALCULATOR</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; background-color: #000; color: #ccc; }
+        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(255,255,255,0.05); }
+        h2 { text-align: center; color: #fff; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { color: #007bff; margin-top: 25px; border-left: 4px solid #007bff; padding-left: 10px; font-size: 18px; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; color: #ccc; font-size: 13px;}
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #444; border-radius: 6px; box-sizing: border-box; font-size: 16px; background-color: #333; color: #fff; }
+        
+        .result-box { padding: 12px; border-radius: 6px; margin: 10px 0; background-color: #333; color: #fff; font-weight: bold; border-left: 4px solid #666; }
+        .cash-flow-total { background-color: #ffc107; color: #000; border: none; }
+        .discrepancy-alert { background-color: #dc3545; color: white; text-align: center; border: none; }
+        .discrepancy-ok { background-color: #28a745; color: white; text-align: center; border: none; }
+        
+        button { width: 100%; padding: 14px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; font-weight: bold; transition: 0.3s; }
+        .btn-backup { background-color: #495057; font-size: 12px; flex: 1; margin-top: 15px; padding: 10px; border-radius: 6px; color: white; border: none; }
+        .btn-restore { background-color: #17a2b8; font-size: 12px; flex: 1; margin-top: 15px; padding: 10px; border-radius: 6px; color: white; border: none; }
+        .btn-delete { background-color: #721c24; padding: 10px; font-size: 12px; width: 100%; margin-top: 12px; border-radius: 6px; color: white; border: none; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+
+        /* Shared Card Style for Reports and History */
+        .card { background: #2c2c2c; padding: 15px; border-radius: 8px; border: 1px solid #444; margin-top: 12px; }
+        .card h4 { margin: 0 0 10px 0; color: #007bff; border-bottom: 1px solid #444; padding-bottom: 5px; text-transform: uppercase; font-size: 14px; }
+        .card p { margin: 6px 0; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; }
+        
+        .val { color: #fff; }
+        .profit-val { color: #28a745; }
+        .rev-val { color: #00d4ff; }
+        .balance-neg { color: #28a745; font-weight: bold; } 
+        .balance-pos { color: #dc3545; font-weight: bold; } 
+        .qty-val { color: #ffc107; }
+
+        .debt-panel { background: #333; border-radius: 8px; padding: 15px; margin-top: 20px; border: 2px solid #007bff; }
+        .debt-title { font-size: 16px; color: #007bff; font-weight: bold; text-align: center; margin-bottom: 10px; text-transform: uppercase;}
+        .debt-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 15px; border-bottom: 1px solid #444; }
+
+        .search-box { width: 100%; padding: 10px; margin: 15px 0; background: #333; color: #fff; border: 1px solid #444; border-radius: 6px; }
+        hr { border: 0.1px solid #444; margin: 10px 0; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>💰 NORAN SHAH CALCULATOR</h2>
+
+        <label>Date:</label>
+        <input type="date" id="date"> 
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;"><label>Sale Price:</label><input type="number" id="unitPrice" value="0" oninput="calculate()"></div>
+            <div style="flex: 1;"><label>Cost Price:</label><input type="number" id="costPrice" value="0" oninput="calculate()"></div>
+        </div>
+
+        <label>Total Product Sold Qty:</label>
+        <input type="number" id="totalSold" value="0" oninput="calculate()">
+
+        <label>Returned Product Qty:</label>
+        <input type="number" id="returnedQuantity" value="0" oninput="calculate()">
+
+        <label>Credit Sales Qty:</label>
+        <input type="number" id="creditSales" value="0" oninput="calculate()">
+
+        <label>Cash Received from Prev. Credit:</label>
+        <input type="number" id="prevCreditReceived" value="0" oninput="calculate()"> 
+        
+        <hr style="border:0.5px solid #444;">
+
+        <label>Actual Cash in Hand:</label>
+        <input type="number" id="receivedCash" value="0" oninput="calculate()">
+
+        <h3>Live Totals</h3>
+        <div class="result-box">Cash Sales Qty: <span id="cashSalesQuantity">0</span></div>
+        <div class="result-box cash-flow-total">Total Expected Cash: <span id="totalExpectedCash">0.00</span></div>
+        <div class="result-box" id="discrepancyBox">Status: <span id="discrepancyStatus">OK</span></div>
+        
+        <button onclick="saveTransaction()">💾 Save Day's Transaction</button>
+
+        <h3>📊 Summary Reports</h3>
+        <div id="summary-section">
+            <div id="weeklyReport" class="card"><h4>Weekly (7 Days)</h4></div>
+            <div id="monthlyReport" class="card"><h4>Monthly (30 Days)</h4></div>
+            <div id="yearlyReport" class="card"><h4>Yearly (365 Days)</h4></div>
+        </div>
+
+        <div class="debt-panel">
+            <div class="debt-title">🚨 Lifetime Debt Tracker</div>
+            <div class="debt-row"><span>Total Credit Issued:</span> <span id="ltCredit">0.00</span></div>
+            <div class="debt-row"><span>Total Cash Recovered:</span> <span id="ltCollected">0.00</span></div>
+            <div class="debt-row" style="border:none; margin-top:5px; font-size:17px;">
+                <span>Current Market Debt:</span> <span id="ltBalance">0.00</span>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn-backup" onclick="downloadBackup()">📥 Backup</button>
+            <button class="btn-restore" onclick="document.getElementById('restoreFile').click()">📤 Restore</button>
+            <input type="file" id="restoreFile" style="display:none" accept=".txt" onchange="handleRestore(event)">
+        </div>
+
+        <h3>🗓️ Daily History</h3>
+        <input type="text" class="search-box" id="historySearch" placeholder="🔍 Search Date (YYYY-MM-DD)..." oninput="loadData()">
+        <div id="historyList"></div>
+    </div>
+
+    <script>
+        function formatDate(date) {
+            const d = new Date(date);
+            return d.toISOString().split('T')[0];
+        }
+        document.getElementById('date').value = formatDate(new Date());
+
+        function calculate() {
+            const salePrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+            const totalSold = parseFloat(document.getElementById('totalSold').value) || 0;
+            const returned = parseFloat(document.getElementById('returnedQuantity').value) || 0;
+            const creditQty = parseFloat(document.getElementById('creditSales').value) || 0;
+            const prevColl = parseFloat(document.getElementById('prevCreditReceived').value) || 0; 
+            const received = parseFloat(document.getElementById('receivedCash').value) || 0;
+
+            const cashQty = Math.max(0, totalSold - returned - creditQty);
+            const expected = (cashQty * salePrice) + prevColl;
+
+            document.getElementById('cashSalesQuantity').textContent = cashQty;
+            document.getElementById('totalExpectedCash').textContent = expected.toFixed(2);
+
+            const sBox = document.getElementById('discrepancyBox');
+            const diff = received - expected;
+            if (diff < 0) {
+                sBox.className = 'result-box discrepancy-alert';
+                document.getElementById('discrepancyStatus').textContent = `⚠️ SHORT: ${Math.abs(diff).toFixed(2)}`;
+            } else {
+                sBox.className = 'result-box discrepancy-ok';
+                document.getElementById('discrepancyStatus').textContent = diff > 0 ? `OK (OVER: ${diff.toFixed(2)})` : "OK";
+            }
+        }
+
+        function saveTransaction() {
+            const date = document.getElementById('date').value;
+            const salePrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+            const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
+            const totalSold = parseFloat(document.getElementById('totalSold').value) || 0;
+            const returned = parseFloat(document.getElementById('returnedQuantity').value) || 0;
+            const creditQty = parseFloat(document.getElementById('creditSales').value) || 0;
+            const prevColl = parseFloat(document.getElementById('prevCreditReceived').value) || 0;
+            const received = parseFloat(document.getElementById('receivedCash').value) || 0;
+
+            const cashQty = Math.max(0, totalSold - returned - creditQty);
+            const profit = (totalSold - returned) * (salePrice - costPrice);
+            const creditValue = creditQty * salePrice;
+            const revenue = (totalSold - returned) * salePrice;
+
+            const entry = {
+                id: Date.now(), date, totalSold, returned, creditQty, cashQty,
+                creditValue, prevColl, received, profit, revenue,
+                totalExpected: (cashQty * salePrice) + prevColl,
+                statusText: document.getElementById('discrepancyStatus').textContent,
+                statusClass: document.getElementById('discrepancyBox').className,
+                timestamp: new Date(date).getTime() + (12*60*60*1000)
+            };
+
+            let history = JSON.parse(localStorage.getItem('noran_history')) || [];
+            const idx = history.findIndex(item => item.date === date);
+            if (idx > -1) history[idx] = entry; else history.push(entry);
+            
+            localStorage.setItem('noran_history', JSON.stringify(history));
+            alert("Record Saved!");
+            loadData();
+        }
+
+        function createReportHTML(title, data, isHistory = false, id = null) {
+            const balance = data.creditVal - data.collected;
+            const balClass = balance > 0 ? 'balance-pos' : (balance < 0 ? 'balance-neg' : 'val');
+            
+            let html = `
+                <div class="card">
+                    <h4>${title}</h4>
+                    <p><span>Total Sold Qty:</span> <span class="qty-val">${data.sold}</span></p>
+                    <p><span>Returned Qty:</span> <span class="qty-val">${data.ret}</span></p>
+                    <p><span>Cash Sell Qty:</span> <span class="qty-val">${data.cash}</span></p>
+                    <p><span>Credit Sell Qty:</span> <span class="qty-val">${data.cred}</span></p>
+                    <hr>
+                    <p><span>Gross Revenue:</span> <span class="rev-val">${data.revenue.toFixed(2)}</span></p>
+                    <p><span>Net Profit:</span> <span class="profit-val">${data.profit.toFixed(2)}</span></p>
+                    <p><span>Credit Given:</span> <span class="val">${data.creditVal.toFixed(2)}</span></p>
+                    <p><span>Credit Collected:</span> <span class="val">${data.collected.toFixed(2)}</span></p>
+                    <p><span>Net Debt Change:</span> <span class="${balClass}">${balance.toFixed(2)}</span></p>
+            `;
+
+            if (isHistory) {
+                html += `
+                    <hr>
+                    <p><span>Exp. Cash:</span> <span class="val">${data.expected.toFixed(2)}</span></p>
+                    <p><span>Rec. Cash:</span> <span class="val">${data.received.toFixed(2)}</span></p>
+                    <div style="padding: 8px; border-radius: 4px; text-align: center; margin-top: 10px; font-size: 12px; font-weight: bold;" class="${data.statusClass}">
+                        ${data.statusText}
+                    </div>
+                    <button class="btn-delete" onclick="deleteEntry(${id})">🗑️ Delete Entry</button>
+                `;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function loadData() {
+            const history = JSON.parse(localStorage.getItem('noran_history')) || [];
+            const searchQuery = document.getElementById('historySearch').value;
+            history.sort((a, b) => b.timestamp - a.timestamp);
+            
+            const now = new Date().getTime();
+            const ranges = {
+                w: { sold:0, ret:0, cash:0, cred:0, creditVal:0, collected:0, profit:0, revenue:0, time: 7 * 86400000 },
+                m: { sold:0, ret:0, cash:0, cred:0, creditVal:0, collected:0, profit:0, revenue:0, time: 30 * 86400000 },
+                y: { sold:0, ret:0, cash:0, cred:0, creditVal:0, collected:0, profit:0, revenue:0, time: 365 * 86400000 }
+            };
+            let ltCr = 0, ltCl = 0;
+
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+
+            history.forEach(item => {
+                ltCr += item.creditValue; ltCl += item.prevColl;
+                
+                for (let r in ranges) {
+                    if (item.timestamp >= now - ranges[r].time) {
+                        ranges[r].sold += item.totalSold;
+                        ranges[r].ret += item.returned;
+                        ranges[r].cash += item.cashQty;
+                        ranges[r].cred += item.creditQty;
+                        ranges[r].creditVal += item.creditValue;
+                        ranges[r].collected += item.prevColl;
+                        ranges[r].profit += item.profit;
+                        ranges[r].revenue += (item.revenue || 0);
+                    }
+                }
+
+                if (!searchQuery || item.date.includes(searchQuery)) {
+                    const historyData = {
+                        sold: item.totalSold,
+                        ret: item.returned,
+                        cash: item.cashQty,
+                        cred: item.creditQty,
+                        revenue: item.revenue || 0,
+                        profit: item.profit,
+                        creditVal: item.creditValue,
+                        collected: item.prevColl,
+                        expected: item.totalExpected,
+                        received: item.received,
+                        statusText: item.statusText,
+                        statusClass: item.statusClass
+                    };
+                    list.innerHTML += createReportHTML(`📅 DATE: ${item.date}`, historyData, true, item.id);
+                }
+            });
+
+            document.getElementById('weeklyReport').innerHTML = createReportHTML("Weekly (7 Days)", ranges.w);
+            document.getElementById('monthlyReport').innerHTML = createReportHTML("Monthly (30 Days)", ranges.m);
+            document.getElementById('yearlyReport').innerHTML = createReportHTML("Yearly (365 Days)", ranges.y);
+
+            document.getElementById('ltCredit').textContent = ltCr.toFixed(2);
+            document.getElementById('ltCollected').textContent = ltCl.toFixed(2);
+            const totalBal = ltCr - ltCl;
+            document.getElementById('ltBalance').textContent = totalBal.toFixed(2);
+            document.getElementById('ltBalance').className = totalBal > 0 ? 'balance-pos' : 'balance-neg';
+        }
+
+        function deleteEntry(id) {
+            if (confirm("Delete this record?")) {
+                let h = JSON.parse(localStorage.getItem('noran_history')).filter(i => i.id !== id);
+                localStorage.setItem('noran_history', JSON.stringify(h));
+                loadData();
+            }
+        }
+
+        function downloadBackup() {
+            const data = localStorage.getItem('noran_history');
+            const blob = new Blob([data], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.download = "Noran_Shah_Data.txt";
+            a.href = URL.createObjectURL(blob);
+            a.click();
+        }
+
+        function handleRestore(e) {
+            const reader = new FileReader();
+            reader.onload = (ev) => { localStorage.setItem('noran_history', ev.target.result); loadData(); alert("Restored!"); };
+            reader.readAsText(e.target.files[0]);
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
